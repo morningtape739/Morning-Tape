@@ -6,7 +6,6 @@
 (function () {
   'use strict';
 
-  // -------------------- ASSET UNIVERSE (20 selectable) --------------------
   const ASSETS = {
     'SPY':   { kind: 'equity', stooq: 'spy.us',   label: 'S&P 500 ETF' },
     'QQQ':   { kind: 'equity', stooq: 'qqq.us',   label: 'Nasdaq 100 ETF' },
@@ -34,7 +33,6 @@
 
   const LOOKBACK_DAYS = { '1Y': 365, '2Y': 730, '3Y': 1095, '5Y': 1825 };
 
-  // -------------------- CACHE --------------------
   const cache = new Map();
   const TTL = 1000 * 60 * 60 * 4;
   const cacheGet = k => {
@@ -45,74 +43,68 @@
   };
   const cacheSet = (k, d) => cache.set(k, { ts: Date.now(), data: d });
 
-  // -------------------- DATA FETCH --------------------
+  const PROXY = 'https://morning-tape-proxy.themorningtape26.workers.dev/?url=';
+
   async function fetchEquity(symbol, days) {
     const key = `eq-${symbol}-${days}`;
     const hit = cacheGet(key); if (hit) return hit;
 
-    // Strategy: try Yahoo Finance first (most reliable, longest history) via CORS proxies,
-    // then fall back to Stooq via the same proxy chain.
     const period2 = Math.floor(Date.now() / 1000);
     const period1 = period2 - days * 86400;
     const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${period1}&period2=${period2}&interval=1d`;
     const stooqUrl = `https://stooq.com/q/d/l/?s=${ASSETS[symbol].stooq}&i=d`;
 
-    const proxies = [
-      u => u, // direct
-      u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-      u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-    ];
-
-    // Try Yahoo via each proxy
-    for (const wrap of proxies) {
-      try {
-        const r = await fetch(wrap(yahooUrl));
-        if (!r.ok) continue;
+    try {
+      const r = await fetch(PROXY + encodeURIComponent(yahooUrl));
+      if (r.ok) {
         const j = await r.json();
         const result = j?.chart?.result?.[0];
-        if (!result) continue;
-        const timestamps = result.timestamp;
-        const closes = result.indicators?.quote?.[0]?.close;
-        if (!timestamps || !closes || timestamps.length < 10) continue;
-        // Filter out null closes (Yahoo sometimes returns nulls for halt days)
-        const dates = [], cleanCloses = [];
-        for (let i = 0; i < timestamps.length; i++) {
-          if (closes[i] != null) {
-            dates.push(new Date(timestamps[i] * 1000).toISOString().slice(0, 10));
-            cleanCloses.push(closes[i]);
+        if (result) {
+          const timestamps = result.timestamp;
+          const closes = result.indicators?.quote?.[0]?.close;
+          if (timestamps && closes && timestamps.length >= 10) {
+            const dates = [], cleanCloses = [];
+            for (let i = 0; i < timestamps.length; i++) {
+              if (closes[i] != null) {
+                dates.push(new Date(timestamps[i] * 1000).toISOString().slice(0, 10));
+                cleanCloses.push(closes[i]);
+              }
+            }
+            if (cleanCloses.length >= 10) {
+              const data = { dates, closes: cleanCloses };
+              cacheSet(key, data); return data;
+            }
           }
         }
-        if (cleanCloses.length < 10) continue;
-        const data = { dates, closes: cleanCloses };
-        cacheSet(key, data); return data;
-      } catch (e) { /* try next proxy */ }
-    }
+      }
+    } catch (e) {}
 
-    // Fall back to Stooq via each proxy
-    for (const wrap of proxies) {
-      try {
-        const r = await fetch(wrap(stooqUrl));
-        if (!r.ok) continue;
+    try {
+      const r = await fetch(PROXY + encodeURIComponent(stooqUrl));
+      if (r.ok) {
         const csv = await r.text();
-        if (!csv || csv.length < 100 || !csv.toLowerCase().includes('date')) continue;
-        const lines = csv.trim().split('\n');
-        if (lines.length < 2) continue;
-        const head = lines[0].toLowerCase().split(',');
-        const di = head.indexOf('date'), ci = head.indexOf('close');
-        if (di < 0 || ci < 0) continue;
-        const rows = lines.slice(1).map(l => l.split(','))
-          .filter(c => c[ci] && !isNaN(+c[ci]));
-        rows.sort((a, b) => a[di].localeCompare(b[di]));
-        const cutoff = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
-        const f = rows.filter(r => r[di] >= cutoff);
-        if (f.length < 10) continue;
-        const data = { dates: f.map(r => r[di]), closes: f.map(r => +r[ci]) };
-        cacheSet(key, data); return data;
-      } catch (e) { /* try next proxy */ }
-    }
+        if (csv && csv.length > 100 && csv.toLowerCase().includes('date')) {
+          const lines = csv.trim().split('\n');
+          if (lines.length >= 2) {
+            const head = lines[0].toLowerCase().split(',');
+            const di = head.indexOf('date'), ci = head.indexOf('close');
+            if (di >= 0 && ci >= 0) {
+              const rows = lines.slice(1).map(l => l.split(','))
+                .filter(c => c[ci] && !isNaN(+c[ci]));
+              rows.sort((a, b) => a[di].localeCompare(b[di]));
+              const cutoff = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+              const f = rows.filter(r => r[di] >= cutoff);
+              if (f.length >= 10) {
+                const data = { dates: f.map(r => r[di]), closes: f.map(r => +r[ci]) };
+                cacheSet(key, data); return data;
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {}
 
-    throw new Error(`All equity sources failed for ${symbol}`);
+    throw new Error(`Equity fetch failed for ${symbol}`);
   }
 
   async function fetchCrypto(symbol, days) {
@@ -149,8 +141,6 @@
   const fetchHistory = (sym, days) =>
     ASSETS[sym].kind === 'crypto' ? fetchCrypto(sym, days) : fetchEquity(sym, days);
 
-  // -------------------- ALIGNMENT --------------------
-  // Aligns multiple series to common date set (intersection)
   function alignSeries(seriesMap) {
     const symbols = Object.keys(seriesMap);
     if (symbols.length === 0) return { dates: [], data: {} };
@@ -165,7 +155,6 @@
     return out;
   }
 
-  // -------------------- MATH HELPERS --------------------
   const pctReturns = closes => {
     const r = [];
     for (let i = 1; i < closes.length; i++) r.push(closes[i] / closes[i-1] - 1);
@@ -189,7 +178,6 @@
   const fmt$ = v => '$' + v.toLocaleString(undefined, { maximumFractionDigits: 0 });
   const fmtPct = v => (v >= 0 ? '+' : '') + (v * 100).toFixed(2) + '%';
 
-  // -------------------- UI SHELL --------------------
   function renderShell(root) {
     root.innerHTML = `
       <div class="lab-wrap">
@@ -218,10 +206,9 @@
         if (sub === 'compare') initCompare();
       });
     });
-    initBacktest(); // default
+    initBacktest();
   }
 
-  // -------------------- ASSET PICKER --------------------
   function buildAssetPicker(selected) {
     const eqList = Object.keys(ASSETS).filter(s => ASSETS[s].kind === 'equity');
     const crList = Object.keys(ASSETS).filter(s => ASSETS[s].kind === 'crypto');
@@ -244,9 +231,6 @@
   }
   const getPicked = panel => Array.from(panel.querySelectorAll('.asset-chip input:checked')).map(c => c.value);
 
-  // ============================================================
-  //  TAB 1: BACKTEST
-  // ============================================================
   let backtestInited = false;
   function initBacktest() {
     if (backtestInited) return;
@@ -323,7 +307,6 @@
       return;
     }
 
-    // Run the simulation per asset
     const results = picked.map(sym => {
       const closes = series.data[sym];
       const startPrice = closes[0];
@@ -347,10 +330,8 @@
       const cagr = mode === 'lump'
         ? Math.pow(finalVal / invested, 1 / yrs) - 1
         : null;
-      // Max drawdown
       let peak = equity[0], maxDD = 0;
       for (const v of equity) { if (v > peak) peak = v; const dd = (v - peak) / peak; if (dd < maxDD) maxDD = dd; }
-      // Volatility
       const rets = pctReturns(closes);
       const vol = stdev(rets) * Math.sqrt(252);
       return { sym, invested, finalVal, totalRet, cagr, maxDD, vol, equity };
@@ -385,7 +366,6 @@
       </div>
     `;
     drawEquityCurves(out.querySelector('#bt-chart'), results, dates);
-    // Stash for potential MC reuse
     window.MT_LAB_LASTRUN = { results, dates };
   }
 
@@ -399,10 +379,8 @@
     const minV = Math.min(...allVals), maxV = Math.max(...allVals);
     const colors = ['#d4a017','#7fa3c7','#c97a7a','#8aa17f','#b58fc7','#d49a59','#6db3a6','#9c8b6b'];
     ctx.clearRect(0,0,W,H);
-    // Axes
     ctx.strokeStyle = '#3a342a'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, H-pad.b); ctx.lineTo(W-pad.r, H-pad.b); ctx.stroke();
-    // Y labels
     ctx.fillStyle = '#a89878'; ctx.font = '11px JetBrains Mono, monospace'; ctx.textAlign = 'right';
     for (let i = 0; i <= 4; i++) {
       const v = minV + (maxV - minV) * (i/4);
@@ -410,14 +388,12 @@
       ctx.fillText(fmt$(v), pad.l - 6, y + 4);
       ctx.strokeStyle = '#2a2620'; ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
     }
-    // X labels
     ctx.textAlign = 'center';
     [0, 0.25, 0.5, 0.75, 1].forEach(t => {
       const i = Math.floor(t * (dates.length - 1));
       const x = pad.l + t * plotW;
       ctx.fillText(dates[i].slice(0,7), x, H - pad.b + 18);
     });
-    // Lines
     results.forEach((r, idx) => {
       ctx.strokeStyle = colors[idx % colors.length];
       ctx.lineWidth = 1.8;
@@ -428,7 +404,6 @@
         i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       });
       ctx.stroke();
-      // Legend
       const ly = pad.t + idx * 18;
       ctx.fillStyle = colors[idx % colors.length];
       ctx.fillRect(W - pad.r + 8, ly, 12, 3);
@@ -437,9 +412,6 @@
     });
   }
 
-  // ============================================================
-  //  TAB 2: SENTIMENT
-  // ============================================================
   let sentimentInited = false;
   async function initSentiment() {
     if (sentimentInited) return;
@@ -463,7 +435,7 @@
     try {
       const r = await fetch('https://api.alternative.me/fng/?limit=90');
       const j = await r.json();
-      const data = j.data.reverse(); // oldest first
+      const data = j.data.reverse();
       const cur = data[data.length - 1];
       const valEl = document.getElementById('fg-current');
       valEl.innerHTML = `<div class="big-num">${cur.value}</div><div class="big-label">${cur.value_classification}</div>`;
@@ -485,39 +457,18 @@
 
   async function loadBtcDominance() {
     try {
-      // CoinGecko global doesn't give history; approximate via BTC mcap / total mcap from histo BTC and ETH+top coins is heavy.
-      // Cleaner: use CoinGecko global current + CryptoCompare for BTC mcap history vs total — also incomplete.
-      // Pragmatic: pull current global dominance, plus 90d BTC mcap from CC and 90d total from CC top-10 sum.
       const ccKey = window.MT?.keys?.cryptoCompare;
-      const top = ['BTC','ETH','USDT','BNB','SOL','XRP','USDC','ADA','DOGE','TRX'];
-      const dailyTotals = new Array(91).fill(0);
-      const btcSeries = new Array(91).fill(0);
-      let dates = [];
-      for (const sym of top) {
-        const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${sym}&tsym=USD&limit=90${ccKey ? '&api_key='+ccKey : ''}`;
-        const r = await fetch(url);
-        const j = await r.json();
-        if (!j.Data?.Data) continue;
-        const rows = j.Data.Data;
-        if (dates.length === 0) dates = rows.map(d => new Date(d.time*1000).toISOString().slice(0,10));
-        // Approximate mcap with close * circulating supply — CC doesn't give supply per day cheaply.
-        // Fallback: weight by current mcap from CoinGecko, scale historic prices.
-      }
-      // Simpler reliable path: just plot BTC price ratio vs (BTC+ETH) over 90d as a *proxy* for dominance trend.
       const btcUrl = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=90${ccKey ? '&api_key='+ccKey : ''}`;
       const ethUrl = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=ETH&tsym=USD&limit=90${ccKey ? '&api_key='+ccKey : ''}`;
       const [bR, eR] = await Promise.all([fetch(btcUrl).then(r=>r.json()), fetch(ethUrl).then(r=>r.json())]);
       const bRows = bR.Data.Data, eRows = eR.Data.Data;
-      // Get current global dominance for absolute calibration
       const gR = await fetch('https://api.coingecko.com/api/v3/global');
       const gJ = await gR.json();
       const curDom = gJ.data.market_cap_percentage.btc;
-      // Compute BTC/(BTC+ETH) ratio history, then linearly scale so the latest value equals curDom * (some factor).
       const ratio = bRows.map((b, i) => {
         const bp = b.close, ep = eRows[i]?.close || 1;
-        return bp / (bp + ep * 12); // 12x rough mcap weighting (BTC supply ~19.8M, ETH ~120M => ~6x; adjust for price ratio)
+        return bp / (bp + ep * 12);
       });
-      // Scale so last value = curDom/100
       const scale = (curDom / 100) / ratio[ratio.length - 1];
       const scaled = ratio.map(v => v * scale * 100);
       const dts = bRows.map(d => new Date(d.time*1000).toISOString().slice(0,10));
@@ -573,9 +524,6 @@
     ctx.stroke();
   }
 
-  // ============================================================
-  //  TAB 3: RISK & MONTE CARLO
-  // ============================================================
   let riskInited = false;
   function initRisk() {
     if (riskInited) return;
@@ -634,12 +582,10 @@
       out.innerHTML = '<div class="lab-msg err">Insufficient data in window.</div>'; return;
     }
 
-    // Correlation matrix
     const returns = {};
     picked.forEach(s => returns[s] = pctReturns(aligned.data[s]));
     const matrix = picked.map(a => picked.map(b => correlation(returns[a], returns[b])));
 
-    // Equal-weight portfolio for MC
     const portRets = [];
     const n = returns[picked[0]].length;
     for (let i = 0; i < n; i++) {
@@ -647,7 +593,6 @@
       for (const s of picked) r += returns[s][i];
       portRets.push(r / picked.length);
     }
-    // Bootstrap MC
     const finals = [];
     const paths = [];
     for (let s = 0; s < sims; s++) {
@@ -659,7 +604,7 @@
         path.push(v);
       }
       finals.push(v);
-      if (s < 100) paths.push(path); // sample paths to plot
+      if (s < 100) paths.push(path);
     }
     finals.sort((a,b)=>a-b);
     const pct = p => finals[Math.floor(finals.length * p)];
@@ -713,7 +658,6 @@
     for (let i = 0; i < syms.length; i++) {
       for (let j = 0; j < syms.length; j++) {
         const v = matrix[i][j];
-        // Color: green (+) to red (-)
         const r = v < 0 ? Math.floor(60 + Math.abs(v)*180) : Math.floor(40 + (1-v)*30);
         const g = v > 0 ? Math.floor(60 + v*120) : Math.floor(40 + (1+v)*20);
         const b = 30;
@@ -761,7 +705,6 @@
       });
       ctx.stroke();
     });
-    // Start line
     const sy = H-pad.b - ((startVal-minV)/(maxV-minV))*ph;
     ctx.strokeStyle = '#c97a7a'; ctx.lineWidth = 1.5; ctx.setLineDash([4,4]);
     ctx.beginPath(); ctx.moveTo(pad.l, sy); ctx.lineTo(W-pad.r, sy); ctx.stroke();
@@ -770,9 +713,6 @@
     ctx.fillText('Start', W-pad.r-30, sy-4);
   }
 
-  // ============================================================
-  //  TAB 4: COMPARISON (normalized)
-  // ============================================================
   let compareInited = false;
   function initCompare() {
     if (compareInited) return;
@@ -814,7 +754,6 @@
     } catch (e) {
       out.innerHTML = `<div class="lab-msg err">${e.message}</div>`; return;
     }
-    // Normalize to 100
     const normalized = {};
     picked.forEach(s => {
       const c = aligned.data[s], base = c[0];
@@ -828,7 +767,6 @@
       </div>
     `;
     drawNormalized(out.querySelector('#cmp-chart'), aligned.dates, normalized);
-    // Summary table
     const rows = picked.map(s => {
       const v = normalized[s];
       const ret = (v[v.length-1] - 100) / 100;
@@ -866,7 +804,6 @@
       ctx.strokeStyle = '#2a2620';
       ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
     }
-    // 100 baseline
     const baseY = H-pad.b - ((100-minV)/(maxV-minV))*ph;
     ctx.strokeStyle = '#5a4f3a'; ctx.setLineDash([3,3]);
     ctx.beginPath(); ctx.moveTo(pad.l,baseY); ctx.lineTo(W-pad.r,baseY); ctx.stroke();
@@ -893,7 +830,6 @@
     });
   }
 
-  // -------------------- PUBLIC API --------------------
   window.MT_LAB = {
     mount: function (rootEl) { renderShell(rootEl); }
   };
