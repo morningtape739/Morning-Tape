@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1612">
+<title>The Morning Tape</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { background: #1a1612; color: #d4c5a0; font-family: 'JetBrains Mono', monospace; min-height: 100vh; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+button { background: transparent; border: none; cursor: pointer; color: inherit; font-family: inherit; }
+
+.app { max-width: 1280px; margin: 0 auto; padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+
+/* Masthead */
+.mast { border-bottom: 2px solid #d4a017; padding-bottom: 12px; margin-bottom: 14px; }
+.mast h1 { font-family: 'Playfair Display', serif; font-weight: 900; font-size: clamp(28px, 6vw, 44px); color: #f0e6c8; letter-spacing: -0.5px; line-height: 1; }
+.mast .sub { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11px; color: #a89878; text-transform: uppercase; letter-spacing: 1.2px; }
+.mast .live { display: inline-flex; align-items: center; gap: 6px; }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: #8aa17f; box-shadow: 0 0 6px #8aa17f; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Top tabs (Dashboard / Lab) */
+.toptabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid #3a342a; }
+.toptab { padding: 10px 18px; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: #a89878; border-bottom: 2px solid transparent; }
+.toptab.active { color: #d4a017; border-bottom-color: #d4a017; }
+
+.page { display: none; }
+.page.active { display: block; }
+
+/* Ticker strip */
+.ticker-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1px; background: #3a342a; border: 1px solid #3a342a; margin-bottom: 14px; overflow: hidden; border-radius: 4px; }
+.tick { background: #211c17; padding: 10px 12px; }
+.tick-sym { font-size: 10px; color: #a89878; letter-spacing: 1px; }
+.tick-px { font-size: 14px; color: #f0e6c8; font-weight: 500; margin-top: 3px; }
+.tick-ch { font-size: 11px; margin-top: 2px; }
+.pos { color: #8aa17f; }
+.neg { color: #c97a7a; }
+
+/* Section titles */
+.sect-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #f0e6c8; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #3a342a; letter-spacing: -0.3px; }
+
+/* Movers */
+.movers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.mover-col { background: #211c17; border: 1px solid #3a342a; border-radius: 4px; padding: 12px; }
+.mover-col h3 { font-size: 11px; color: #d4a017; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+.mover-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12px; border-bottom: 1px dotted #2a2620; }
+.mover-row:last-child { border: none; }
+.mover-sym { color: #f0e6c8; font-weight: 500; }
+
+/* Options ideas */
+.opt-card { background: #211c17; border: 1px solid #3a342a; border-left: 3px solid #d4a017; padding: 12px; margin-bottom: 8px; border-radius: 4px; }
+.opt-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.opt-sym { font-size: 14px; color: #f0e6c8; font-weight: 700; letter-spacing: 1px; }
+.opt-tag { font-size: 10px; padding: 2px 7px; border-radius: 2px; letter-spacing: 1px; }
+.opt-tag.fade { background: #3a1f1f; color: #c97a7a; }
+.opt-tag.cont { background: #1f3a2a; color: #8aa17f; }
+.opt-tag.hold { background: #2a2a1f; color: #d4a017; }
+.opt-body { font-size: 12px; color: #d4c5a0; line-height: 1.5; }
+.opt-body em { color: #a89878; font-style: normal; }
+
+/* Watchlist */
+.watch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.watch-card { background: #211c17; border: 1px solid #3a342a; padding: 10px; border-radius: 4px; }
+.watch-head { display: flex; justify-content: space-between; align-items: baseline; }
+.watch-sym { font-size: 13px; color: #f0e6c8; font-weight: 700; }
+.watch-px { font-size: 12px; color: #d4c5a0; }
+.watch-ch { font-size: 11px; margin-top: 2px; }
+.watch-spark { margin-top: 6px; }
+
+/* News */
+.news-list { display: flex; flex-direction: column; gap: 10px; }
+.news-item { background: #211c17; border: 1px solid #3a342a; padding: 12px; border-radius: 4px; }
+.news-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 10px; color: #a89878; letter-spacing: 1px; text-transform: uppercase; }
+.news-cat { color: #d4a017; }
+.news-title { font-family: 'Playfair Display', serif; font-size: 15px; color: #f0e6c8; line-height: 1.3; margin-bottom: 4px; }
+.news-src { font-size: 10px; color: #a89878; }
+
+/* Settings */
+.settings { background: #211c17; border: 1px solid #3a342a; padding: 14px; border-radius: 4px; margin-top: 18px; }
+.settings h3 { font-size: 12px; color: #d4a017; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+.settings-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.settings-row label { font-size: 11px; color: #a89878; min-width: 110px; }
+.settings-row input { background: #1a1612; border: 1px solid #3a342a; color: #d4c5a0; padding: 6px 8px; border-radius: 3px; font-family: inherit; font-size: 11px; flex: 1; min-width: 180px; }
+.settings-row button { background: #d4a017; color: #1a1612; padding: 7px 14px; font-size: 11px; font-weight: 700; letter-spacing: 1px; border-radius: 3px; }
+
+/* ============ LAB STYLES ============ */
+.lab-wrap { padding: 4px 0; }
+.lab-subtabs { display: flex; gap: 4px; margin-bottom: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.lab-subtab { padding: 8px 14px; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: #a89878; background: #211c17; border: 1px solid #3a342a; border-radius: 3px; white-space: nowrap; }
+.lab-subtab.active { color: #1a1612; background: #d4a017; border-color: #d4a017; font-weight: 700; }
+.lab-panel { display: none; }
+.lab-panel.active { display: block; }
+.lab-controls { background: #211c17; border: 1px solid #3a342a; padding: 12px; border-radius: 4px; margin-bottom: 14px; }
+.ctrl-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 12px; }
+.ctrl { display: flex; flex-direction: column; gap: 4px; min-width: 130px; }
+.ctrl label { font-size: 10px; color: #a89878; letter-spacing: 1px; text-transform: uppercase; }
+.ctrl select, .ctrl input[type="number"] { background: #1a1612; border: 1px solid #3a342a; color: #d4c5a0; padding: 7px 8px; border-radius: 3px; font-family: inherit; font-size: 12px; }
+.ctrl input[type="range"] { width: 160px; accent-color: #d4a017; }
+.ctrl-val { font-size: 11px; color: #d4a017; }
+.run-btn { background: #d4a017; color: #1a1612; padding: 9px 18px; font-size: 11px; font-weight: 700; letter-spacing: 1px; border-radius: 3px; text-transform: uppercase; }
+.run-btn:hover { background: #e0b020; }
+
+.asset-picker { display: flex; flex-direction: column; gap: 10px; }
+.ap-group { }
+.ap-label { font-size: 10px; color: #d4a017; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 6px; }
+.ap-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.asset-chip { display: inline-flex; align-items: center; padding: 5px 10px; background: #1a1612; border: 1px solid #3a342a; border-radius: 3px; cursor: pointer; font-size: 11px; user-select: none; }
+.asset-chip input { display: none; }
+.asset-chip.on { background: #2a2110; border-color: #d4a017; color: #d4a017; }
+
+.lab-card { background: #211c17; border: 1px solid #3a342a; padding: 14px; border-radius: 4px; margin-bottom: 14px; }
+.lab-card-title { font-family: 'Playfair Display', serif; font-size: 16px; color: #f0e6c8; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #3a342a; }
+.lab-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.lab-table th { text-align: left; padding: 6px 8px; color: #a89878; font-weight: 500; border-bottom: 1px solid #3a342a; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+.lab-table td { padding: 7px 8px; border-bottom: 1px dotted #2a2620; }
+.lab-table td.sym { color: #f0e6c8; font-weight: 700; }
+.lab-note { font-size: 10px; color: #a89878; margin-top: 8px; font-style: italic; }
+.lab-msg { padding: 14px; text-align: center; color: #a89878; font-size: 12px; }
+.lab-msg.err { color: #c97a7a; }
+
+.fg-display { text-align: center; padding: 10px 0 14px; }
+.fg-display .big-num { font-family: 'Playfair Display', serif; font-size: 48px; color: #d4a017; line-height: 1; }
+.fg-display .big-label { font-size: 11px; color: #a89878; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+.fg-display.fear .big-num { color: #c97a7a; }
+.fg-display.mild-fear .big-num { color: #d4a017; }
+.fg-display.neutral .big-num { color: #d4c5a0; }
+.fg-display.mild-greed .big-num { color: #8aa17f; }
+.fg-display.greed .big-num { color: #6db3a6; }
+
+.mc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.mc-stats > div { background: #1a1612; border: 1px solid #2a2620; padding: 8px; border-radius: 3px; text-align: center; }
+.mc-lbl { display: block; font-size: 10px; color: #a89878; letter-spacing: 1px; text-transform: uppercase; }
+.mc-val { display: block; font-size: 14px; color: #f0e6c8; font-weight: 700; margin-top: 3px; }
+.mc-val.pos { color: #8aa17f; }
+.mc-val.neg { color: #c97a7a; }
+
+#corr-heatmap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 600px) {
+  .ctrl { min-width: 110px; flex: 1; }
+  .ctrl input[type="range"] { width: 100%; }
+  .mast h1 { font-size: 28px; }
+  .opt-card { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="mast">
+  <h1>The Morning Tape</h1>
+  <div class="sub">
+    <span id="mast-date">—</span>
+    <span class="live"><span class="live-dot"></span>LIVE</span>
+  </div>
+</header>
+
+<nav class="toptabs">
+  <button class="toptab active" data-page="dashboard">Dashboard</button>
+  <button class="toptab" data-page="lab">Lab</button>
+</nav>
+
+<!-- ============ DASHBOARD PAGE ============ -->
+<section id="page-dashboard" class="page active">
+
+  <div id="ticker-strip" class="ticker-strip"></div>
+
+  <h2 class="sect-title">Movers</h2>
+  <div id="movers" class="movers-grid"></div>
+
+  <h2 class="sect-title">Options Trade Ideas</h2>
+  <div id="opts"></div>
+
+  <h2 class="sect-title">Watchlist</h2>
+  <div id="watchlist" class="watch-grid"></div>
+
+  <h2 class="sect-title">News</h2>
+  <div id="news" class="news-list"></div>
+
+  <div class="settings">
+    <h3>API Keys (stored locally in your browser)</h3>
+    <div class="settings-row">
+      <label>Finnhub Key</label>
+      <input type="password" id="key-finnhub" placeholder="finnhub api key">
+    </div>
+    <div class="settings-row">
+      <label>CryptoCompare Key</label>
+      <input type="password" id="key-cc" placeholder="cryptocompare api key">
+    </div>
+    <div class="settings-row">
+      <button id="save-keys">Save &amp; Reload</button>
+      <span id="keys-status" style="font-size:11px;color:#a89878"></span>
+    </div>
+  </div>
+
+</section>
+
+<!-- ============ LAB PAGE ============ -->
+<section id="page-lab" class="page">
+  <div id="lab-root"></div>
+</section>
+
+</div>
+
+<script>
+/* =====================================================
+   THE MORNING TAPE — DASHBOARD CORE (index.html)
+   ===================================================== */
+'use strict';
+
+// ---------- Keys: localStorage ----------
+const KEYS = {
+  finnhub: localStorage.getItem('mt_key_finnhub') || '',
+  cryptoCompare: localStorage.getItem('mt_key_cc') || '',
+};
+window.MT = { keys: KEYS };
+
+document.getElementById('key-finnhub').value = KEYS.finnhub;
+document.getElementById('key-cc').value = KEYS.cryptoCompare;
+document.getElementById('save-keys').addEventListener('click', () => {
+  localStorage.setItem('mt_key_finnhub', document.getElementById('key-finnhub').value.trim());
+  localStorage.setItem('mt_key_cc', document.getElementById('key-cc').value.trim());
+  document.getElementById('keys-status').textContent = 'Saved. Reloading…';
+  setTimeout(() => location.reload(), 500);
+});
+
+// ---------- Date ----------
+(function () {
+  const d = new Date();
+  const opts = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+  document.getElementById('mast-date').textContent = d.toLocaleDateString('en-US', opts);
+})();
+
+// ---------- Tab switching ----------
+document.querySelectorAll('.toptab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.toptab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const page = btn.dataset.page;
+    document.getElementById('page-' + page).classList.add('active');
+    if (page === 'lab' && window.MT_LAB) {
+      const root = document.getElementById('lab-root');
+      if (!root.dataset.mounted) {
+        window.MT_LAB.mount(root);
+        root.dataset.mounted = '1';
+      }
+    }
+  });
+});
+
+// ---------- Universe ----------
+const INDICES = [
+  { sym: '^GSPC',  label: 'S&P 500',  type: 'index',  stooq: '^spx' },
+  { sym: '^IXIC',  label: 'NASDAQ',   type: 'index',  stooq: '^ndx' },
+  { sym: '^DJI',   label: 'DOW',      type: 'index',  stooq: '^dji' },
+  { sym: '^VIX',   label: 'VIX',      type: 'index',  stooq: '^vix' },
+  { sym: '^TNX',   label: '10Y',      type: 'index',  stooq: '10usy.b' },
+  { sym: 'DXY',    label: 'DXY',      type: 'index',  stooq: '^dx' },
+  { sym: 'GOLD',   label: 'GOLD',     type: 'index',  stooq: 'xauusd' },
+  { sym: 'BTC',    label: 'BTC',      type: 'crypto' },
+  { sym: 'ETH',    label: 'ETH',      type: 'crypto' },
+];
+
+const WATCHLIST_EQ = ['NVDA','AAPL','MSFT','META','AMZN','GOOGL','TSLA','MSTR','COIN','SMH','JEPQ','SCHD'];
+const WATCHLIST_CR = ['BTC','ETH','SOL','LINK'];
+
+// ---------- Helpers ----------
+const $ = id => document.getElementById(id);
+const fmtPx = v => v >= 1000 ? v.toLocaleString(undefined, {maximumFractionDigits: 2}) : v.toFixed(2);
+const fmtCh = v => (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+
+// ---------- Stooq fallback for equity quote ----------
+async function stooqQuote(symbol) {
+  const url = `https://stooq.com/q/l/?s=${symbol}&f=sd2t2ohlcv&h&e=csv`;
+  let csv;
+  try {
+    const r = await fetch(url);
+    csv = await r.text();
+  } catch {
+    const r2 = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+    csv = await r2.text();
+  }
+  const lines = csv.trim().split('\n');
+  if (lines.length < 2) return null;
+  const cells = lines[1].split(',');
+  const close = +cells[6], open = +cells[3];
+  if (!close || !open) return null;
+  return { price: close, change: ((close - open) / open) * 100 };
+}
+
+async function finnhubQuote(symbol) {
+  if (!KEYS.finnhub) return null;
+  try {
+    const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${KEYS.finnhub}`);
+    const j = await r.json();
+    if (!j.c) return null;
+    return { price: j.c, change: j.dp };
+  } catch { return null; }
+}
+
+async function getEquityQuote(symbol, stooqSym) {
+  const fh = await finnhubQuote(symbol);
+  if (fh) return fh;
+  if (stooqSym) return await stooqQuote(stooqSym);
+  return await stooqQuote(symbol.toLowerCase() + '.us');
+}
+
+async function getCryptoQuote(sym) {
+  const ccKey = KEYS.cryptoCompare;
+  try {
+    const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${sym}&tsyms=USD${ccKey ? '&api_key=' + ccKey : ''}`;
+    const r = await fetch(url);
+    const j = await r.json();
+    const d = j.RAW?.[sym]?.USD;
+    if (d) return { price: d.PRICE, change: d.CHANGEPCT24HOUR };
+  } catch {}
+  // Fallback CoinGecko
+  const ids = { BTC: 'bitcoin', ETH: 'ethereum', SOL: 'solana', LINK: 'chainlink' };
+  try {
+    const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids[sym]}&vs_currencies=usd&include_24hr_change=true`);
+    const j = await r.json();
+    const d = j[ids[sym]];
+    return { price: d.usd, change: d.usd_24h_change };
+  } catch { return null; }
+}
+
+// ---------- Ticker strip ----------
+async function loadTickers() {
+  const strip = $('ticker-strip');
+  strip.innerHTML = INDICES.map(t => `
+    <div class="tick" data-sym="${t.sym}">
+      <div class="tick-sym">${t.label}</div>
+      <div class="tick-px">—</div>
+      <div class="tick-ch">…</div>
+    </div>`).join('');
+  for (const t of INDICES) {
+    let q = null;
+    if (t.type === 'crypto') q = await getCryptoQuote(t.sym);
+    else q = await getEquityQuote(t.sym, t.stooq);
+    if (!q) continue;
+    const el = strip.querySelector(`[data-sym="${t.sym}"]`);
+    el.querySelector('.tick-px').textContent = fmtPx(q.price);
+    const ch = el.querySelector('.tick-ch');
+    ch.textContent = fmtCh(q.change);
+    ch.className = 'tick-ch ' + (q.change >= 0 ? 'pos' : 'neg');
+  }
+}
+
+// ---------- Watchlist ----------
+async function loadWatchlist() {
+  const wl = $('watchlist');
+  const all = [...WATCHLIST_EQ.map(s=>({s,t:'eq'})), ...WATCHLIST_CR.map(s=>({s,t:'cr'}))];
+  wl.innerHTML = all.map(x => `
+    <div class="watch-card" data-sym="${x.s}">
+      <div class="watch-head"><span class="watch-sym">${x.s}</span><span class="watch-px">—</span></div>
+      <div class="watch-ch">…</div>
+      <div class="watch-spark"><svg width="100%" height="28" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline class="spk" fill="none" stroke="#a89878" stroke-width="1" points=""/></svg></div>
+    </div>`).join('');
+
+  for (const x of all) {
+    const card = wl.querySelector(`[data-sym="${x.s}"]`);
+    let q = null, hist = null;
+    if (x.t === 'cr') {
+      q = await getCryptoQuote(x.s);
+      hist = await fetchSpark(x.s, 'crypto');
+    } else {
+      q = await getEquityQuote(x.s);
+      hist = await fetchSpark(x.s, 'equity');
+    }
+    if (q) {
+      card.querySelector('.watch-px').textContent = fmtPx(q.price);
+      const ch = card.querySelector('.watch-ch');
+      ch.textContent = fmtCh(q.change);
+      ch.className = 'watch-ch ' + (q.change >= 0 ? 'pos' : 'neg');
+    }
+    if (hist && hist.length > 1) {
+      const min = Math.min(...hist), max = Math.max(...hist);
+      const range = max - min || 1;
+      const pts = hist.map((v, i) => `${(i/(hist.length-1))*100},${28 - ((v-min)/range)*26 - 1}`).join(' ');
+      const line = card.querySelector('.spk');
+      line.setAttribute('points', pts);
+      line.setAttribute('stroke', hist[hist.length-1] >= hist[0] ? '#8aa17f' : '#c97a7a');
+    }
+  }
+}
+
+async function fetchSpark(sym, kind) {
+  try {
+    if (kind === 'crypto') {
+      const ccKey = KEYS.cryptoCompare;
+      const url = `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${sym}&tsym=USD&limit=30${ccKey ? '&api_key=' + ccKey : ''}`;
+      const r = await fetch(url); const j = await r.json();
+      return j.Data?.Data?.map(d => d.close) || null;
+    }
+    // Equity: stooq daily for ~30 trading days
+    const url = `https://stooq.com/q/d/l/?s=${sym.toLowerCase()}.us&i=d`;
+    let csv;
+    try { csv = await (await fetch(url)).text(); }
+    catch { csv = await (await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`)).text(); }
+    const lines = csv.trim().split('\n');
+    const closes = lines.slice(1).map(l => +l.split(',')[4]).filter(v => !isNaN(v));
+    return closes.slice(-30);
+  } catch { return null; }
+}
+
+// ---------- Movers ----------
+async function loadMovers() {
+  const m = $('movers');
+  if (!KEYS.finnhub) {
+    m.innerHTML = '<div class="lab-msg">Add Finnhub API key to load movers.</div>';
+    return;
+  }
+  try {
+    // Finnhub has no free-tier movers endpoint — rank our watchlist universe by today's change.
+    const universe = [...WATCHLIST_EQ, ...['SPY','QQQ','IWM','SMH']];
+    const quotes = [];
+    for (const s of universe) {
+      const q = await finnhubQuote(s);
+      if (q) quotes.push({ sym: s, ...q });
+    }
+    quotes.sort((a, b) => b.change - a.change);
+    const winners = quotes.slice(0, 5);
+    const losers = [...quotes].reverse().slice(0, 5);
+    const vol = [...quotes].sort((a,b) => Math.abs(b.change) - Math.abs(a.change)).slice(0, 5);
+    const col = (title, list) => `
+      <div class="mover-col">
+        <h3>${title}</h3>
+        ${list.map(q => `<div class="mover-row">
+          <span class="mover-sym">${q.sym}</span>
+          <span class="${q.change>=0?'pos':'neg'}">${fmtCh(q.change)}</span>
+        </div>`).join('')}
+      </div>`;
+    m.innerHTML = col('Winners', winners) + col('Losers', losers) + col('Most Volatile', vol);
+  } catch (e) {
+    m.innerHTML = '<div class="lab-msg err">Movers failed to load.</div>';
+  }
+}
+
+// ---------- Options Ideas (heuristic) ----------
+async function loadOptionsIdeas() {
+  const out = $('opts');
+  const candidates = ['MSTR','COIN','NVDA','SMH','JEPQ','SCHD','BTC','ETH'];
+  const incomeIncl = ['JEPQ','SCHD'];
+  const cryptoProxies = ['MSTR','COIN'];
+  const ideas = [];
+  for (const sym of candidates) {
+    const isCrypto = sym === 'BTC' || sym === 'ETH';
+    const q = isCrypto ? await getCryptoQuote(sym) : await getEquityQuote(sym);
+    if (!q) continue;
+    if (incomeIncl.includes(sym)) {
+      ideas.push({ sym, tag: 'hold', tagLabel: 'INCOME', body: `Income sleeve. <em>No new options trade — hold and collect distributions.</em>` });
+      continue;
+    }
+    if (cryptoProxies.includes(sym) && Math.abs(q.change) > 4) {
+      const dir = q.change > 0 ? 'rip' : 'drop';
+      ideas.push({
+        sym, tag: 'fade', tagLabel: 'FADE',
+        body: `${sym} ${fmtCh(q.change)} on a ${dir}. <em>Consider short-dated ${q.change > 0 ? 'put credit spread above' : 'call credit spread below'} the move; high-beta BTC proxy, mean reversion likely if BTC stalls.</em>`
+      });
+      continue;
+    }
+    if ((sym === 'NVDA' || sym === 'SMH') && q.change > 1.5) {
+      ideas.push({
+        sym, tag: 'cont', tagLabel: 'CONTINUATION',
+        body: `${sym} ${fmtCh(q.change)}. <em>Trend continuation candidate — debit call spread 30-45 DTE if SMH breadth confirms.</em>`
+      });
+      continue;
+    }
+    if (isCrypto && Math.abs(q.change) > 5) {
+      ideas.push({
+        sym, tag: q.change > 0 ? 'fade' : 'cont', tagLabel: q.change > 0 ? 'OVEREXTENDED' : 'OVERSOLD',
+        body: `${sym} ${fmtCh(q.change)} 24h. <em>Spot-only context — no listed options. Watch for follow-through into US session.</em>`
+      });
+    }
+  }
+  if (ideas.length === 0) {
+    out.innerHTML = '<div class="lab-msg">Quiet tape. No flagged setups across the watchlist today.</div>';
+    return;
+  }
+  out.innerHTML = ideas.map(i => `
+    <div class="opt-card">
+      <div class="opt-head"><span class="opt-sym">${i.sym}</span><span class="opt-tag ${i.tag}">${i.tagLabel}</span></div>
+      <div class="opt-body">${i.body}</div>
+    </div>`).join('');
+}
+
+// ---------- News ----------
+async function loadNews() {
+  const out = $('news');
+  if (!KEYS.finnhub) {
+    out.innerHTML = '<div class="lab-msg">Add Finnhub API key to load news.</div>';
+    return;
+  }
+  try {
+    const cats = [
+      { c: 'general', label: 'MACRO' },
+      { c: 'crypto',  label: 'CRYPTO' },
+      { c: 'merger',  label: 'M&A' },
+    ];
+    const all = [];
+    for (const cat of cats) {
+      const r = await fetch(`https://finnhub.io/api/v1/news?category=${cat.c}&token=${KEYS.finnhub}`);
+      const j = await r.json();
+      j.slice(0, 4).forEach(n => all.push({ ...n, _cat: cat.label }));
+    }
+    all.sort((a, b) => b.datetime - a.datetime);
+    out.innerHTML = all.slice(0, 12).map(n => `
+      <a class="news-item" href="${n.url}" target="_blank" rel="noopener">
+        <div class="news-head"><span class="news-cat">${n._cat}</span><span>${new Date(n.datetime*1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span></div>
+        <div class="news-title">${n.headline}</div>
+        <div class="news-src">${n.source}</div>
+      </a>`).join('');
+  } catch (e) {
+    out.innerHTML = '<div class="lab-msg err">News failed to load.</div>';
+  }
+}
+
+// ---------- Boot ----------
+loadTickers();
+loadWatchlist();
+loadMovers();
+loadOptionsIdeas();
+loadNews();
+
+// Auto-refresh tickers every 60s
+setInterval(loadTickers, 60000);
+</script>
+
+<!-- Lab module (loaded async; mounts on first Lab tab click) -->
+<script src="lab.js" defer></script>
+
+</body>
+</html>
