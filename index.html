@@ -16,7 +16,6 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
 
 .app { max-width: 1280px; margin: 0 auto; padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 
-/* Masthead */
 .mast { border-bottom: 2px solid #d4a017; padding-bottom: 12px; margin-bottom: 14px; }
 .mast h1 { font-family: 'Playfair Display', serif; font-weight: 900; font-size: clamp(28px, 6vw, 44px); color: #f0e6c8; letter-spacing: -0.5px; line-height: 1; }
 .mast .sub { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11px; color: #a89878; text-transform: uppercase; letter-spacing: 1.2px; }
@@ -24,7 +23,6 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
 .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #8aa17f; box-shadow: 0 0 6px #8aa17f; animation: pulse 2s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-/* Top tabs (Dashboard / Lab) */
 .toptabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid #3a342a; }
 .toptab { padding: 10px 18px; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: #a89878; border-bottom: 2px solid transparent; }
 .toptab.active { color: #d4a017; border-bottom-color: #d4a017; }
@@ -32,7 +30,6 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
 .page { display: none; }
 .page.active { display: block; }
 
-/* Ticker strip */
 .ticker-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1px; background: #3a342a; border: 1px solid #3a342a; margin-bottom: 14px; overflow: hidden; border-radius: 4px; }
 .tick { background: #211c17; padding: 10px 12px; }
 .tick-sym { font-size: 10px; color: #a89878; letter-spacing: 1px; }
@@ -41,10 +38,8 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
 .pos { color: #8aa17f; }
 .neg { color: #c97a7a; }
 
-/* Section titles */
 .sect-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #f0e6c8; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #3a342a; letter-spacing: -0.3px; }
 
-/* Movers */
 .movers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
 .mover-col { background: #211c17; border: 1px solid #3a342a; border-radius: 4px; padding: 12px; }
 .mover-col h3 { font-size: 11px; color: #d4a017; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
@@ -52,7 +47,6 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
 .mover-row:last-child { border: none; }
 .mover-sym { color: #f0e6c8; font-weight: 500; }
 
-/* Options ideas */
 .opt-card { background: #211c17; border: 1px solid #3a342a; border-left: 3px solid #d4a017; padding: 12px; margin-bottom: 8px; border-radius: 4px; }
 .opt-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
 .opt-sym { font-size: 14px; color: #f0e6c8; font-weight: 700; letter-spacing: 1px; }
@@ -63,7 +57,6 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
 .opt-body { font-size: 12px; color: #d4c5a0; line-height: 1.5; }
 .opt-body em { color: #a89878; font-style: normal; }
 
-/* Watchlist */
 .watch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
 .watch-card { background: #211c17; border: 1px solid #3a342a; padding: 10px; border-radius: 4px; }
 .watch-head { display: flex; justify-content: space-between; align-items: baseline; }
@@ -72,7 +65,6 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
 .watch-ch { font-size: 11px; margin-top: 2px; }
 .watch-spark { margin-top: 6px; }
 
-/* News */
 .news-list { display: flex; flex-direction: column; gap: 10px; }
 .news-item { background: #211c17; border: 1px solid #3a342a; padding: 12px; border-radius: 4px; }
 .news-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 10px; color: #a89878; letter-spacing: 1px; text-transform: uppercase; }
@@ -80,7 +72,6 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
 .news-title { font-family: 'Playfair Display', serif; font-size: 15px; color: #f0e6c8; line-height: 1.3; margin-bottom: 4px; }
 .news-src { font-size: 10px; color: #a89878; }
 
-/* Settings */
 .settings { background: #211c17; border: 1px solid #3a342a; padding: 14px; border-radius: 4px; margin-top: 18px; }
 .settings h3 { font-size: 12px; color: #d4a017; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
 .settings-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
@@ -88,7 +79,6 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
 .settings-row input { background: #1a1612; border: 1px solid #3a342a; color: #d4c5a0; padding: 6px 8px; border-radius: 3px; font-family: inherit; font-size: 11px; flex: 1; min-width: 180px; }
 .settings-row button { background: #d4a017; color: #1a1612; padding: 7px 14px; font-size: 11px; font-weight: 700; letter-spacing: 1px; border-radius: 3px; }
 
-/* ============ LAB STYLES ============ */
 .lab-wrap { padding: 4px 0; }
 .lab-subtabs { display: flex; gap: 4px; margin-bottom: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .lab-subtab { padding: 8px 14px; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: #a89878; background: #211c17; border: 1px solid #3a342a; border-radius: 3px; white-space: nowrap; }
@@ -106,7 +96,6 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
 .run-btn:hover { background: #e0b020; }
 
 .asset-picker { display: flex; flex-direction: column; gap: 10px; }
-.ap-group { }
 .ap-label { font-size: 10px; color: #d4a017; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 6px; }
 .ap-chips { display: flex; flex-wrap: wrap; gap: 5px; }
 .asset-chip { display: inline-flex; align-items: center; padding: 5px 10px; background: #1a1612; border: 1px solid #3a342a; border-radius: 3px; cursor: pointer; font-size: 11px; user-select: none; }
@@ -165,7 +154,6 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
   <button class="toptab" data-page="lab">Lab</button>
 </nav>
 
-<!-- ============ DASHBOARD PAGE ============ -->
 <section id="page-dashboard" class="page active">
 
   <div id="ticker-strip" class="ticker-strip"></div>
@@ -200,7 +188,6 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
 
 </section>
 
-<!-- ============ LAB PAGE ============ -->
 <section id="page-lab" class="page">
   <div id="lab-root"></div>
 </section>
@@ -208,12 +195,8 @@ button { background: transparent; border: none; cursor: pointer; color: inherit;
 </div>
 
 <script>
-/* =====================================================
-   THE MORNING TAPE — DASHBOARD CORE (index.html)
-   ===================================================== */
 'use strict';
 
-// ---------- Keys: localStorage ----------
 const KEYS = {
   finnhub: localStorage.getItem('mt_key_finnhub') || '',
   cryptoCompare: localStorage.getItem('mt_key_cc') || '',
@@ -229,14 +212,12 @@ document.getElementById('save-keys').addEventListener('click', () => {
   setTimeout(() => location.reload(), 500);
 });
 
-// ---------- Date ----------
 (function () {
   const d = new Date();
   const opts = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
   document.getElementById('mast-date').textContent = d.toLocaleDateString('en-US', opts);
 })();
 
-// ---------- Tab switching ----------
 document.querySelectorAll('.toptab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.toptab').forEach(b => b.classList.remove('active'));
@@ -254,7 +235,6 @@ document.querySelectorAll('.toptab').forEach(btn => {
   });
 });
 
-// ---------- Universe ----------
 const INDICES = [
   { sym: '^GSPC',  label: 'S&P 500',  type: 'index',  yahoo: '^GSPC' },
   { sym: '^IXIC',  label: 'NASDAQ',   type: 'index',  yahoo: '^IXIC' },
@@ -270,31 +250,23 @@ const INDICES = [
 const WATCHLIST_EQ = ['NVDA','AAPL','MSFT','META','AMZN','GOOGL','TSLA','MSTR','COIN','SMH','JEPQ','SCHD'];
 const WATCHLIST_CR = ['BTC','ETH','SOL','LINK','XRP','ADA'];
 
-// ---------- Helpers ----------
 const $ = id => document.getElementById(id);
 const fmtPx = v => v >= 1000 ? v.toLocaleString(undefined, {maximumFractionDigits: 2}) : v.toFixed(2);
 const fmtCh = v => (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
 
-// ---------- Quote sources with multi-proxy fallback ----------
-// Multi-proxy fetch helper — tries direct, then 3 CORS proxies in sequence
+// ---------- Quote sources via Cloudflare Worker proxy ----------
+const PROXY = 'https://morning-tape-proxy.themorningtape26.workers.dev/?url=';
+
 async function tryFetch(url, asJson = false) {
-  const proxies = [
-    u => u,
-    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-  ];
-  for (const wrap of proxies) {
-    try {
-      const r = await fetch(wrap(url));
-      if (!r.ok) continue;
-      return asJson ? await r.json() : await r.text();
-    } catch { /* next proxy */ }
+  try {
+    const r = await fetch(PROXY + encodeURIComponent(url));
+    if (!r.ok) return null;
+    return asJson ? await r.json() : await r.text();
+  } catch {
+    return null;
   }
-  return null;
 }
 
-// Yahoo Finance quote — works for stocks, ETFs, indices (^GSPC, ^IXIC, ^DJI, ^VIX, ^TNX, GC=F for gold, DX-Y.NYB for DXY)
 async function yahooQuote(symbol) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=5d`;
   const j = await tryFetch(url, true);
@@ -331,11 +303,9 @@ async function finnhubQuote(symbol) {
 }
 
 async function getEquityQuote(symbol, yahooSym) {
-  // Yahoo first — works for indices AND stocks, no CORS issues via proxy chain
   const ySym = yahooSym || symbol;
   const y = await yahooQuote(ySym);
   if (y) return y;
-  // Finnhub fallback for stocks (doesn't quote indices on free tier)
   const fh = await finnhubQuote(symbol);
   if (fh) return fh;
   return null;
@@ -350,7 +320,6 @@ async function getCryptoQuote(sym) {
     const d = j.RAW?.[sym]?.USD;
     if (d) return { price: d.PRICE, change: d.CHANGEPCT24HOUR };
   } catch {}
-  // Fallback CoinGecko
   const ids = { BTC: 'bitcoin', ETH: 'ethereum', SOL: 'solana', LINK: 'chainlink', XRP: 'ripple', ADA: 'cardano' };
   try {
     const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids[sym]}&vs_currencies=usd&include_24hr_change=true`);
@@ -360,7 +329,6 @@ async function getCryptoQuote(sym) {
   } catch { return null; }
 }
 
-// ---------- Ticker strip ----------
 async function loadTickers() {
   const strip = $('ticker-strip');
   strip.innerHTML = INDICES.map(t => `
@@ -382,7 +350,6 @@ async function loadTickers() {
   }
 }
 
-// ---------- Watchlist ----------
 async function loadWatchlist() {
   const wl = $('watchlist');
   const all = [...WATCHLIST_EQ.map(s=>({s,t:'eq'})), ...WATCHLIST_CR.map(s=>({s,t:'cr'}))];
@@ -428,9 +395,8 @@ async function fetchSpark(sym, kind) {
       const r = await fetch(url); const j = await r.json();
       return j.Data?.Data?.map(d => d.close) || null;
     }
-    // Equity: Yahoo chart endpoint via proxy chain
     const period2 = Math.floor(Date.now() / 1000);
-    const period1 = period2 - 45 * 86400; // ~30 trading days
+    const period1 = period2 - 45 * 86400;
     const yUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?period1=${period1}&period2=${period2}&interval=1d`;
     const j = await tryFetch(yUrl, true);
     const closes = j?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
@@ -439,7 +405,6 @@ async function fetchSpark(sym, kind) {
   } catch { return null; }
 }
 
-// ---------- Movers ----------
 async function loadMovers() {
   const m = $('movers');
   if (!KEYS.finnhub) {
@@ -447,7 +412,6 @@ async function loadMovers() {
     return;
   }
   try {
-    // Finnhub has no free-tier movers endpoint — rank our watchlist universe by today's change.
     const universe = [...WATCHLIST_EQ, ...['SPY','QQQ','IWM','SMH']];
     const quotes = [];
     for (const s of universe) {
@@ -472,7 +436,6 @@ async function loadMovers() {
   }
 }
 
-// ---------- Options Ideas (heuristic) ----------
 async function loadOptionsIdeas() {
   const out = $('opts');
   const candidates = ['MSTR','COIN','NVDA','SMH','JEPQ','SCHD','BTC','ETH'];
@@ -520,7 +483,6 @@ async function loadOptionsIdeas() {
     </div>`).join('');
 }
 
-// ---------- News ----------
 async function loadNews() {
   const out = $('news');
   if (!KEYS.finnhub) {
@@ -551,18 +513,15 @@ async function loadNews() {
   }
 }
 
-// ---------- Boot ----------
 loadTickers();
 loadWatchlist();
 loadMovers();
 loadOptionsIdeas();
 loadNews();
 
-// Auto-refresh tickers every 60s
 setInterval(loadTickers, 60000);
 </script>
 
-<!-- Lab module (loaded async; mounts on first Lab tab click) -->
 <script src="lab.js" defer></script>
 
 </body>
